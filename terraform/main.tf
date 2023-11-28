@@ -31,18 +31,19 @@ resource "aws_apprunner_service" "websocketserver" {
     code_repository {
       code_configuration {
         code_configuration_values {
-          build_command = "python install websockets"
+          build_command = "python -m pip install websockets"
           port          = "8765"
           runtime       = "PYTHON_3"
           start_command = "python app.py"
         }
         configuration_source = "API"
       }
-      repository_url = "git@github.com:arongate/basic-websocket-server.git"
+      repository_url = "git@github.com:arongate/thin-websocket-app.git"
       source_code_version {
         type  = "BRANCH"
         value = "main"
       }
+      source_directory = "server"
     }
   }
 
