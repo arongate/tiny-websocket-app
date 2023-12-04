@@ -1,38 +1,22 @@
-import asyncio
-import websockets
+from wsgiref.simple_server import make_server
+from pyramid.config import Configurator
+from pyramid.response import Response
+import os
 
-async def handle_client(websocket, path):
-    try:
-        print(f"Client connected from {websocket.remote_address}")
 
-        # Receive and handle messages from the client
-        async for message in websocket:
-            print(f"Received message: {message}")
+def hello_world(request):
+    name = os.environ.get('NAME')
+    if name == None or len(name) == 0:
+        name = "world"
+    message = "Hello, " + name + "!\n"
+    return Response(message)
 
-            # Process the received message (you can add your logic here)
-            response_message = f"Server received: {message}"
 
-            # Send a response back to the client
-            await websocket.send(response_message)
-            print(f"Sent response: {response_message}")
-
-    except websockets.exceptions.ConnectionClosedError:
-        print(f"Connection with {websocket.remote_address} closed")
-
-async def main():
-    # WebSocket server configuration
-    server_address = "localhost"
-    server_port = 8765
-
-    print(f"Running main function...")
-
-    # Start the WebSocket server
-    server = await websockets.serve(handle_client, server_address, server_port)
-    print(f"WebSocket server started at ws://{server_address}:{server_port}")
-
-    # Keep the server running
-    await server.wait_closed()
-
-if __name__ == "__main__":
-    print(f"Starting application...")
-    asyncio.run(main())
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", "8080"))
+    with Configurator() as config:
+        config.add_route('hello', '/')
+        config.add_view(hello_world, route_name='hello')
+        app = config.make_wsgi_app()
+    server = make_server('0.0.0.0', port, app)
+    server.serve_forever()
