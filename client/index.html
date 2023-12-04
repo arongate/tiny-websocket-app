@@ -5,13 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebSocket Example</title>
-    <!-- Include jQuery library -->
-    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 </head>
 
 <body>
 
     <h1>WebSocket Example</h1>
+
+    <div>
+        <label for="wsEndpoint">WebSocket endpoint:</label>
+        <input type="text" id="wsEndpoint">
+        <button onclick="connectToWS()"> Connection to WebSocket</button>
+    </div>
 
     <div>
         <label for="messageInput">Message:</label>
@@ -22,51 +26,63 @@
     <div id="messageOutput"></div>
 
     <script>
-        // WebSocket connection URL
-        const socketUrl = 'ws://localhost:8765';
+        var myWebSocket;
 
-        // Establish WebSocket connection
-        const socket = new WebSocket(socketUrl);
+        function connectToWS() {
+            var endpoint = document.getElementById("wsEndpoint").value;
+            if (myWebSocket !== undefined) {
+                myWebSocket.close()
+            }
+            
+            console.log("creating the web socket client!")
+            myWebSocket = new WebSocket(endpoint);
 
-        // Event handler for WebSocket open connection
-        socket.onopen = (event) => {
-            console.log('WebSocket connection opened:', event);
-        };
+            // Event handler for received messages
+            myWebSocket.onmessage = (event) => {
+                var leng;
+                if (event.data.size === undefined) {
+                    leng = event.data.length
+                } else {
+                    leng = event.data.size
+                }
+                const message = JSON.parse(event.data);
+                displayMessage(message);
+            };
 
-        // Event handler for received messages
-        socket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-            displayMessage(message);
-        };
+            // Event handler for WebSocket open connection
+            myWebSocket.onopen = (event) => {
+                console.log('WebSocket connection opened:', event);
+            };
 
-        // Event handler for WebSocket errors
-        socket.onerror = (error) => {
-            console.error('WebSocket error:', error);
-        };
+            // Event handler for WebSocket close connection
+            myWebSocket.onclose = (event) => {
+                console.log('WebSocket connection closed:', event);
+            };
 
-        // Event handler for WebSocket close connection
-        socket.onclose = (event) => {
-            console.log('WebSocket connection closed:', event);
-        };
+            // Event handler for WebSocket errors
+            myWebSocket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+        }
 
         // Function to send a message through the WebSocket
         function sendMessage() {
-            const messageInput = $('#messageInput').val();
+            var messageInput = document.getElementById('messageInput').value;
             const message = {
                 type: "message",
                 text: messageInput,
                 id: "123456",
                 date: Date.now(),
             };
-            socket.send(JSON.stringify(message));
-            $('#messageInput').val(''); // Clear input field
+            myWebSocket.send(JSON.stringify(message));
         }
 
         // Function to display a received message
         function displayMessage(message) {
-            const messageOutput = $('#messageOutput');
+            var messageOutput = document.getElementById('messageOutput');
             console.log("received message: ", message);
-            const formattedMessage = `<p>${message.text}</p>`;
+            const formattedMessage = `<p>${message}</p>`;
             messageOutput.append(formattedMessage);
         }
     </script>
