@@ -1,5 +1,6 @@
 import asyncio
 import websockets
+import os
 
 async def handle_client(websocket, path):
     try:
@@ -20,9 +21,10 @@ async def handle_client(websocket, path):
         print(f"Connection with {websocket.remote_address} closed")
 
 async def main():
+    port = int(os.environ.get("PORT", "8080"))
     # WebSocket server configuration
     server_address = "localhost"
-    server_port = 8765
+    server_port = port
 
     print(f"Running main function...")
 
