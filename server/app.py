@@ -1,40 +1,66 @@
 import asyncio
-import websockets
+from aiohttp import web, WSMsgType
 import os
 
-async def handle_client(websocket, path):
-    try:
-        print(f"Client connected from {websocket.remote_address}")
 
-        # Receive and handle messages from the client
-        async for message in websocket:
-            print(f"Received message: {message}")
+async def websocket_handler(request):
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
 
-            # Process the received message (you can add your logic here)
-            response_message = f"Server received: {message}"
+    remote_addr = request.transport.get_extra_info('peername')
+    print(f"WebSocket connection from {remote_addr}")
+
+    # Add the WebSocket connection to a set to keep track of clients
+    app = request.app
+    app['websockets'].add(ws)
+
+    # Receive and handle messages from the client
+    async for msg in ws:
+        if msg.type == WSMsgType.TEXT:
+            print(f"Received WebSocket message: {msg.data}")
 
             # Send a response back to the client
-            await websocket.send(response_message)
-            print(f"Sent response: {response_message}")
+            await ws.send_str(f"Received your message: {msg.data}")
+        elif msg.type == WSMsgType.ERROR:
+            break
 
-    except websockets.exceptions.ConnectionClosedError:
-        print(f"Connection with {websocket.remote_address} closed")
+    # Remove the WebSocket connection from the set when the connection is closed
+    app['websockets'].remove(ws)
+    print('f"WebSocket connection from {remote_addr} closed')
+
+    return ws
+
+
+async def health_check(request):
+    return web.Response(text="OK", status=200)
+
 
 async def main():
-    port = int(os.environ.get("PORT", "8080"))
-    # WebSocket server configuration
-    server_address = "localhost"
-    server_port = port
-
     print(f"Running main function...")
+    # server configuration
+    server_address = "0.0.0.0"
+    server_port = int(os.environ.get("PORT", "8080"))
 
-    # Start the WebSocket server
-    server = await websockets.serve(handle_client, server_address, server_port)
-    print(f"WebSocket server started at ws://{server_address}:{server_port}")
+    app = web.Application()
+    app.router.add_get('/ws', websocket_handler)
+    app.router.add_get('/health', health_check)
+
+    # Create a set to keep track of WebSocket connections
+    app['websockets'] = set()
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+
+    site = web.TCPSite(runner, server_address, server_port)
+    await site.start()
+
+    print(
+        f"Server started. Listening on http://{server_address}:{server_port}")
 
     # Keep the server running
-    await server.wait_closed()
+    await asyncio.Event().wait()
 
 if __name__ == "__main__":
     print(f"Starting application...")
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
