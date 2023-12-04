@@ -24,6 +24,8 @@ async def main():
     server_address = "localhost"
     server_port = 8765
 
+    print(f"Running main function...")
+
     # Start the WebSocket server
     server = await websockets.serve(handle_client, server_address, server_port)
     print(f"WebSocket server started at ws://{server_address}:{server_port}")
@@ -32,4 +34,5 @@ async def main():
     await server.wait_closed()
 
 if __name__ == "__main__":
+    print(f"Starting application...")
     asyncio.run(main())
