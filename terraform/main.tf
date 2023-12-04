@@ -48,6 +48,9 @@ resource "aws_apprunner_service" "websocketserver" {
           port          = "8765"
           runtime       = "PYTHON_3"
           start_command = "python app.py"
+          runtime_environment_variables = {
+            PORT = "8765"
+          }
         }
         configuration_source = "API"
       }
@@ -61,10 +64,11 @@ resource "aws_apprunner_service" "websocketserver" {
   }
 
   health_check_configuration {
-    interval            = 3
-    healthy_threshold   = 2
-    protocol            = "TCP"
-    unhealthy_threshold = 10
+    interval            = 1
+    healthy_threshold   = 1
+    path                = "/health"
+    protocol            = "HTTP"
+    unhealthy_threshold = 3
   }
 
   network_configuration {
