@@ -45,7 +45,8 @@
                 } else {
                     leng = event.data.size
                 }
-                const message = JSON.parse(event.data);
+                //const message = JSON.parse(event.data);
+                const message = event.data;
                 displayMessage(message);
             };
 

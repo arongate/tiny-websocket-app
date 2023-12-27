@@ -13,6 +13,7 @@ Open the `index.html` file in a web browser to connect to a WebSocket server.
     - Once the HTML file is open, the WebSocket client will attempt to connect to a WebSocket server.
 
 3. **Send and Receive Messages:**
+    - configure web socket url (only websocket sheme `ws` or `wss` accepted)
     - Use the provided input field to send messages to the server.
     - Received messages from the server will be displayed in the console.
 
