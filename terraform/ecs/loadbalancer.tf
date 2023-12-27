@@ -47,7 +47,8 @@ locals {
 }
 
 resource "aws_s3_bucket" "lb_logs" {
-  bucket = local.lb_logs_bucket_name
+  bucket        = local.lb_logs_bucket_name
+  force_destroy = true
   tags = {
     Name = local.lb_logs_bucket_name
   }
