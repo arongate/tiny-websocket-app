@@ -61,6 +61,7 @@ resource "docker_image" "app" {
 resource "docker_registry_image" "app" {
   name          = docker_image.app.name
   keep_remotely = true
+  depends_on    = [null_resource.ecr_registry_auth]
 }
 
 data "aws_iam_policy_document" "app_ecr_repository_policy" {

@@ -1,27 +1,3 @@
-terraform {
-  required_version = "~> 1.5"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-    docker = {
-      source  = "kreuzwerker/docker"
-      version = "3.0.2"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.aws_region
-  default_tags {
-    tags = {
-      Terraform = "true"
-      Env       = "test"
-    }
-  }
-}
-
 resource "aws_kms_key" "ecs" {
   description             = "ecs key"
   deletion_window_in_days = 7
@@ -37,65 +13,6 @@ locals {
 resource "aws_kms_alias" "ecs" {
   name          = "alias/ecs-${local.ecs_cluster_name}"
   target_key_id = aws_kms_key.ecs.key_id
-}
-
-resource "aws_kms_key" "cloudwatch_logs" {
-  description             = "cloudwatch logs key"
-  deletion_window_in_days = 7
-  tags = {
-    Name = local.ecs_cluster_name
-  }
-}
-
-locals {
-  ecs_log_group_name = "/aws/ecs/${local.ecs_cluster_name}"
-}
-
-data "aws_iam_policy_document" "cloudwatch_logs_kms_key_policy" {
-  statement {
-    sid    = "EnableIAMUserPermissions"
-    effect = "Allow"
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
-    }
-    actions   = ["kms:*"]
-    resources = ["*"]
-  }
-  statement {
-    effect = "Allow"
-    principals {
-      type        = "Service"
-      identifiers = ["logs.${data.aws_region.current.name}.amazonaws.com"]
-    }
-    actions = [
-      "kms:Encrypt*",
-      "kms:Decrypt*",
-      "kms:ReEncrypt*",
-      "kms:GenerateDataKey*",
-      "kms:Describe*"
-    ]
-    resources = ["*"]
-    condition {
-      test     = "ArnEquals"
-      variable = "kms:EncryptionContext:aws:logs:arn"
-      values   = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:${local.ecs_log_group_name}"]
-    }
-  }
-}
-
-resource "aws_kms_key_policy" "cloudwatch_logs" {
-  key_id = aws_kms_key.cloudwatch_logs.id
-  policy = data.aws_iam_policy_document.cloudwatch_logs_kms_key_policy.json
-}
-
-resource "aws_cloudwatch_log_group" "ecs" {
-  name              = local.ecs_log_group_name
-  retention_in_days = 1
-  kms_key_id        = aws_kms_key.cloudwatch_logs.arn
-  tags = {
-    Name = "cwlogs-ecs-${local.ecs_cluster_name}"
-  }
 }
 
 resource "aws_ecs_cluster" "this" {
@@ -133,48 +50,6 @@ resource "aws_ecs_cluster_capacity_providers" "this" {
   }
 }
 
-data "aws_iam_policy_document" "ecs_trust" {
-  statement {
-    principals {
-      type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
-    }
-    actions = ["sts:AssumeRole"]
-    effect  = "Allow"
-  }
-}
-
-data "aws_iam_policy_document" "ecs_task_custom_policy" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "ecr:GetAuthorizationToken",
-      "ecr:BatchCheckLayerAvailability",
-      "ecr:GetDownloadUrlForLayer",
-      "ecr:BatchGetImage",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ]
-    resources = ["*"]
-  }
-}
-
-locals {
-  ecs_task_exec_role_name = coalesce(var.ecs_task_exec_role_name, "${local.ecs_cluster_name}-task-exec-role")
-}
-
-resource "aws_iam_role" "ecs_task_execution_role" {
-  name               = local.ecs_task_exec_role_name
-  assume_role_policy = data.aws_iam_policy_document.ecs_trust.json
-  inline_policy {
-    name   = "custom"
-    policy = data.aws_iam_policy_document.ecs_task_custom_policy.json
-  }
-  tags = {
-    Name = local.ecs_task_exec_role_name
-  }
-}
-
 locals {
   ecs_task_def_family = "test"
   container_name      = "app"
@@ -187,6 +62,7 @@ resource "aws_ecs_task_definition" "app" {
   cpu                      = 1024
   memory                   = 2048
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
   container_definitions = jsonencode([
     {
       name               = local.container_name
@@ -204,6 +80,15 @@ resource "aws_ecs_task_definition" "app" {
           hostPort      = 8080
         }
       ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs_task.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = local.container_name
+        }
+      }
     }
   ])
 

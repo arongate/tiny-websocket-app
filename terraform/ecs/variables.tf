@@ -40,11 +40,21 @@ variable "ecs_cluster_name" {
   default     = null
 }
 
+### iam ###
+
 variable "ecs_task_exec_role_name" {
   type        = string
   description = "The name of the ecs task execution role. Generated if not provided."
   default     = null
 }
+
+variable "ecs_task_role_name" {
+  type        = string
+  description = "The name of the ecs task role. Generated if not provided."
+  default     = null
+}
+
+### security ###
 
 variable "ecs_task_sg_name" {
   type        = string
@@ -91,4 +101,18 @@ variable "app_port" {
   type        = number
   description = "The application port."
   default     = 8080
+}
+
+variable "alb_account_id" {
+  type        = string
+  description = <<EOT
+The AWS account ID of the ALB service account.
+see https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html
+EOT
+}
+
+variable "ecs_cloudwatch_logs_retention_in_days" {
+  type        = number
+  description = "The number of days to retain the ecs cloudwatch logs."
+  default     = 3
 }

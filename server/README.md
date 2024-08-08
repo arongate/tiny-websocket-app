@@ -1,64 +1,79 @@
 # Basic WebSocket Server
 
-This repository contains a simple Python application that functions as a WebSocket server, capable of receiving messages from both WebSocket clients and socket clients.
+This is a simple WebSocket server application built using the `aiohttp` library in Python. The server listens for incoming WebSocket connections and echoes back any text messages received from clients.
 
-## Getting Started
+## Features
 
-### Prerequisites
+* Handles WebSocket connections and text messages
+* Logs incoming connections and messages
+* Provides a health check endpoint (`/health`)
+* Configurable server address and port via environment variables
 
-Before running the server, ensure you have Python installed on your machine.
+## Requirements
 
-```bash
-# Install required Python libraries
-pip install websockets
-```
+* Python 3.7 or later
+* Install python depencencies in a virutl env
 
-## Running the Server
-
-***Clone this repository:***
-
-```bash
-git clone https://github.com/your-username/basic-websocket-server.git
-cd basic-websocket-server
-```
-
-***Run the server:***
-
-```bash
-git clone https://github.com/your-username/basic-websocket-server.git
-cd basic-websocket-server
-```
-
-The server will start and listen for WebSocket connections on `ws://localhost:8765` and socket connections on `localhost:8888`.
+  python -m venv venv
+  source venv/bin/activate
+  pip install -r requirements.txt
 
 ## Usage
 
-### WebSocket Communication
+1. Set the following environment variables (optional):
 
-Connect to the WebSocket server using a WebSocket client and send/receive messages.
+    * `SERVER_ADDRESS`: The IP address or hostname to bind the server to (default: `0.0.0.0`)
+    * `SERVER_PORT`: The port number to listen on (default: `8080`)
 
-***Example using JavaScript and [WebSocket API](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API):***
+2. Run the server:
 
-```bash
-var socket = new WebSocket('ws://localhost:8765');
+    python app.py
 
-socket.onmessage = function(event) {
+3. The server will start, and you should see a log message indicating the server address and port it's listening on.
+
+## Testing
+
+You can test the WebSocket server using a WebSocket client or a web browser with WebSocket support.
+
+### Using a WebSocket Client
+
+1. Install a WebSocket client tool like `wscat` ( `npm install -g wscat`).
+
+2. Connect to the WebSocket server: `wscat -c ws://localhost:8080/ws`
+
+3. Send a text message to the server, and you should see the server echo back the same message.
+
+### Using a Web Browser
+
+1. Open a web browser and navigate to `http://localhost:8080/ws`.
+
+2. Open the browser's developer console.
+
+3. Create a new WebSocket connection: `const ws = new WebSocket('ws://localhost:8080/ws');`
+
+4. Set up event handlers for the WebSocket connection:
+
+    ```javascript
+    ws.onopen = () => {
+    console.log('WebSocket connection opened');
+    ws.send('Hello, server!');
+    };
+
+    ws.onmessage = (event) => {
     console.log('Received message:', event.data);
-};
+    };
 
-socket.onopen = function(event) {
-    console.log('WebSocket connection opened:', event);
-};
+    ws.onerror = (error) => {
+    console.error('WebSocket error:', error);
+    };
 
-// Send a message
-socket.send('Hello, WebSocket!');
+    ws.onclose = () => {
+    console.log('WebSocket connection closed');
+    };
+    ```
 
-```
+5. You should see the server echo back the message you sent in the console.
 
-## Contributing
+## Health Check
 
-Contributions are welcome! Feel free to open issues or submit pull requests.
-
-## License
-
-This project is licensed under the [MIT License](https://chat.openai.com/c/LICENSE).
+The server provides a health check endpoint at `/health`. You can test it by sending an HTTP GET request to `http://localhost:8080/health`. The server should respond with `OK` and a `200` status code.

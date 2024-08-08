@@ -93,16 +93,16 @@ data "aws_iam_policy_document" "ecr_vpc_endpoint_policy" {
     actions   = ["*"]
     resources = ["*"]
   }
-  statement {
-    sid    = "PreventDelete"
-    effect = "Deny"
-    principals {
-      type        = "AWS"
-      identifiers = ["*"]
-    }
-    actions   = ["ecr:DeleteRepository"]
-    resources = [aws_ecr_repository.app.repository_url]
-  }
+  # statement {
+  #   sid    = "PreventDelete"
+  #   effect = "Deny"
+  #   principals {
+  #     type        = "AWS"
+  #     identifiers = ["*"]
+  #   }
+  #   actions   = ["ecr:DeleteRepository"]
+  #   resources = [aws_ecr_repository.app.repository_url]
+  # }
   statement {
     sid    = "AllowPull"
     effect = "Allow"
@@ -199,6 +199,45 @@ resource "aws_vpc_endpoint" "kms_fips" {
   subnet_ids          = module.vpc.private_subnets
   security_group_ids  = [aws_security_group.vpce.id]
   vpc_endpoint_type   = "Interface"
+  dns_options {
+    dns_record_ip_type = "ipv4"
+  }
+}
+
+data "aws_iam_policy_document" "cloudwatch_logs_vpc_endpoint_policy" {
+  statement {
+    sid    = "AllowAll"
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+    actions   = ["*"]
+    resources = ["*"]
+  }
+  statement {
+    sid    = "AllowPush"
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = [aws_iam_role.ecs_task_role.arn]
+    }
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_vpc_endpoint" "cloudwatch_logs" {
+  vpc_id              = module.vpc.vpc_id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.logs"
+  private_dns_enabled = true
+  subnet_ids          = module.vpc.private_subnets
+  security_group_ids  = [aws_security_group.vpce.id]
+  vpc_endpoint_type   = "Interface"
+  policy              = data.aws_iam_policy_document.cloudwatch_logs_vpc_endpoint_policy.json
   dns_options {
     dns_record_ip_type = "ipv4"
   }

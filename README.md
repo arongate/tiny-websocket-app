@@ -20,10 +20,17 @@ The `server` folder contains a minimalist WebSocket server written in Python.
 
 ### Terraform
 
-The `terraform` folder contains Terraform code for deploying the WebSocket server on AWS App Runner.
+The `terraform` folder contains Terraform code for deploying the solution:
 
-- **File:**
-  - `main.tf`: Terraform code for AWS App Runner deployment.
+- Backend
+
+  With in any of the following ways
+  - in App Runner
+  - as an ECS Task in an ECS cluster behind a load balancer
+
+- Frontend
+
+  - as a Static Single page application uploaded in an s3 bucket and distributed using a Cloudfront distribution.
 
 ## Getting Started
 
@@ -31,7 +38,9 @@ Follow the instructions in each folder to set up and run the WebSocket client, W
 
 - [Client Setup](./client/README.md)
 - [Server Setup](./server/README.md)
-- [AWS App Runner Deployment](./terraform/README.md)
+- [AWS App Runner Deployment](./terraform/apprunner/README.md)
+- [ECS Deployment](./terraform/ecs/README.md)
+- [Cloudfront Distribution Deployment](./terraform/cloudfront/README.md)
 
 ## Contributing
 

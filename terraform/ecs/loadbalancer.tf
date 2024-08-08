@@ -83,7 +83,7 @@ data "aws_iam_policy_document" "lb_logs_resource_policy" {
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::054676820928:root"] # see https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html
+      identifiers = ["arn:aws:iam::${var.alb_account_id}:root"] # see https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html
     }
     actions = ["s3:PutObject"]
     resources = [

@@ -1,6 +1,6 @@
-# Terraform Deployment for WebSocket Server on AWS App Runner
+# Terraform Deployment for Cloudfront Distribution
 
-This folder contains Terraform code for deploying the WebSocket server on AWS App Runner.
+This folder contains Terraform code for deploying the client app on AWS.
 
 ## Prerequisites
 
@@ -15,9 +15,8 @@ Before deploying with Terraform, make sure you have the following:
 3. **AWS CLI Installed:**
     - [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
 
-4. **AWS App Runner Access:**
-    - Ensure your AWS IAM user has the necessary permissions for AWS App Runner.
-    - Check if AWS App Runner is available in your deployment region.
+4. **AWS Services Access:**
+    - Ensure your AWS IAM user has the necessary permissions for AWS CloudFront, KMS, S3.
 
 ## Usage
 
